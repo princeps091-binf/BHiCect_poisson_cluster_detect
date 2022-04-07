@@ -8,7 +8,7 @@ res_num <- c(1e6,5e5,1e5,5e4,1e4,5e3)
 names(res_num)<-res_set
 #-----------------------------------------
 feature_file<-"./data/GRanges/CAGE_union_GM12878_Grange.Rda"
-cl_folder<-"./data/GRanges/BHiCect_Grange/GM12878/"
+cl_folder<-"~/Documents/multires_bhicect/Bootstrapp_fn/data/GRanges/BHiCect_Grange/GM12878/"
 hic_dat_folder<-"~/Documents/multires_bhicect/data/GM12878/"
 #-----------------------------------------
 #Utils. Fn
@@ -41,3 +41,44 @@ cage_chr_reff_l<-do.call(bind_rows,map(dat_res_set,function(tmp_res){
     
   }))
 }))
+
+chr_set<-str_split_fixed(grep("^chr",list.files(cl_folder),value=T),"_",n=2)[,1]
+cl_res_l<-vector('list',length(chr_set))
+names(cl_res_l)<-chr_set
+for(chromo in chr_set){
+  message(chromo)
+  cl_chr_tbl<-obj_in_fn(paste0(cl_folder,chromo,"_BHiCect_cl.Rda"))
+  chr_feature_Grange<-feature_GRange[seqnames(feature_GRange)==chromo]
+  cl<-makeCluster(5)
+  clusterEvalQ(cl, {
+    library(GenomicRanges)
+    print("node ready")
+  })
+  clusterExport(cl,c("chr_feature_Grange"))#
+  cl_inter_vec<-unlist(parLapply(cl,cl_chr_tbl$GRange,function(x){
+    sum(countOverlaps(x,chr_feature_Grange))
+  }))
+  stopCluster(cl)
+  rm(cl)
+  
+  cl_chr_tbl<-cl_chr_tbl%>%mutate(feature_n=cl_inter_vec)%>% filter(feature_n>0)
+  
+  cl_res_l[[chromo]]<-cl_chr_tbl %>% 
+    dplyr::select(chr,cl,res,feature_n) %>% 
+    mutate(cl.bin=as.numeric(str_split_fixed(cl,"_",3)[,2]))
+}
+cl_res_tbl<-do.call(bind_rows,cl_res_l)
+plan(multisession,workers=5)
+cl_res_tbl<-cl_res_tbl %>% 
+  left_join(.,cage_chr_reff_l) %>% 
+#  dplyr::slice(1:5) %>% 
+  mutate(pois.pval=future_pmap_dbl(list(feature_n,cl.bin,chr.cage.count,bin.count),function(feature_n,cl.bin,chr.cage.count,bin.count){
+    poisson.test(c(feature_n,chr.cage.count),T=c(cl.bin,bin.count))$p.value
+  }))
+plan(sequential)
+
+cl_res_tbl %>% 
+  mutate(res=fct_relevel(res,names(res_num))) %>% 
+  ggplot(.,aes(-log10(pois.pval)))+
+  geom_histogram()+
+  facet_wrap(res~.,scales='free')
