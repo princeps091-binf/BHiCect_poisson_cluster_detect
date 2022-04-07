@@ -9,7 +9,7 @@ names(res_num)<-res_set
 #-----------------------------------------
 feature_file<-"./data/GRanges/CAGE_union_GM12878_Grange.Rda"
 cl_folder<-"./data/GRanges/BHiCect_Grange/GM12878/"
-hic_dat_folder<-"~/Documents/multires_bhicect/data/GM12878/100kb/"
+hic_dat_folder<-"~/Documents/multires_bhicect/data/GM12878/"
 #-----------------------------------------
 #Utils. Fn
 obj_in_fn<-function(file){
@@ -20,8 +20,24 @@ obj_in_fn<-function(file){
   return(obj_out)
 }
 get_bin_dat<-function(dat_folder,tmp_res,chromo){
-  hic_dat<-obj_in_fn(paste0(hic_dat_folder,tmp_res,"/",chromo,".txt"))
+  hic_dat<-read_tsv(paste0(hic_dat_folder,tmp_res,"/",chromo,".txt"),col_names = F)
   bin_dat<-tibble(chr=chromo,res=tmp_res,bin=unique(c(hic_dat$X1,hic_dat$X2)))
   return(bin_dat)
 }
 #-----------------------------------------
+feature_GRange<-obj_in_fn(feature_file)
+
+dat_res_set<-grep("b$",list.files(hic_dat_folder),value=T)
+cage_chr_reff_l<-do.call(bind_rows,map(dat_res_set,function(tmp_res){
+  message(tmp_res)
+  tmp_chr_set<-str_split_fixed(grep("^chr",list.files(paste0(hic_dat_folder,tmp_res,"/")),value=T),pattern = "\\.",n=2)[,1]
+  tmp_res_tbl<-do.call(bind_rows,lapply(tmp_chr_set,function(chromo){
+    bin_dat<-get_bin_dat(hic_dat_folder,tmp_res,chromo)
+    bin_Grange<-GRanges(seqnames=bin_dat$chr,
+                        ranges = IRanges(start=as.numeric(bin_dat$bin),
+                                         end=as.numeric(bin_dat$bin) + res_num[bin_dat$res] -1
+                        ))
+    return(tibble(chr=chromo,res=tmp_res,chr.cage.count=sum(countOverlaps(bin_Grange,feature_GRange)),bin.count=length(bin_Grange)))
+    
+  }))
+}))
