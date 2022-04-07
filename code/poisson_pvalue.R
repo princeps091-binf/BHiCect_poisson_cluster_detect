@@ -73,12 +73,32 @@ cl_res_tbl<-cl_res_tbl %>%
   left_join(.,cage_chr_reff_l) %>% 
 #  dplyr::slice(1:5) %>% 
   mutate(pois.pval=future_pmap_dbl(list(feature_n,cl.bin,chr.cage.count,bin.count),function(feature_n,cl.bin,chr.cage.count,bin.count){
-    poisson.test(c(feature_n,chr.cage.count),T=c(cl.bin,bin.count))$p.value
+    poisson.test(c(feature_n,chr.cage.count),T=c(cl.bin,bin.count),alternative = "greater")$p.value
   }))
 plan(sequential)
 
 cl_res_tbl %>% 
   mutate(res=fct_relevel(res,names(res_num))) %>% 
-  ggplot(.,aes(-log10(pois.pval)))+
-  geom_histogram()+
+  ggplot(.,aes(feature_n,-log10(pois.pval)))+
+  geom_point()+
   facet_wrap(res~.,scales='free')
+save(cl_res_tbl,file="./data/GM12878_pois_pval_tbl.Rda")
+#------------------------------------------------------------------
+load("~/Documents/multires_bhicect/Bootstrapp_fn/data/pval_tbl/CAGE_union_GM12878_pval_tbl.Rda")
+
+
+cl_chr_emp_pval_tbl %>% 
+  mutate(res=fct_relevel(res,names(res_num))) %>% 
+  ggplot(.,aes(feature_n,-log10(emp.pval)))+
+  geom_point()+
+  facet_wrap(res~.,scales='free')
+
+cl_chr_emp_pval_tbl %>% 
+  dplyr::select(chr,res,cl,emp.pval) %>% 
+  left_join(.,cl_res_tbl %>% 
+              dplyr::select(chr,res,cl,pois.pval)) %>% 
+  mutate(res=fct_relevel(res,names(res_num))) %>% 
+  ggplot(.,aes(-log10(emp.pval),-log10(pois.pval)))+
+  geom_smooth()+
+  facet_wrap(res~.,scales='free')
+
