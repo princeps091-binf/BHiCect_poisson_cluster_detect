@@ -7,9 +7,9 @@ res_set <- c('1Mb','500kb','100kb','50kb','10kb','5kb')
 res_num <- c(1e6,5e5,1e5,5e4,1e4,5e3)
 names(res_num)<-res_set
 #-----------------------------------------
-feature_file<-"./data/GRanges/CAGE_union_GM12878_Grange.Rda"
-cl_folder<-"~/Documents/multires_bhicect/Bootstrapp_fn/data/GRanges/BHiCect_Grange/GM12878/"
-hic_dat_folder<-"~/Documents/multires_bhicect/data/GM12878/"
+feature_file<-"./data/GRanges/CAGE_union_H1_Grange.Rda"
+cl_folder<-"~/Documents/multires_bhicect/Bootstrapp_fn/data/GRanges/BHiCect_Grange/H1/"
+hic_dat_folder<-"~/Documents/multires_bhicect/data/H1/Dekker/"
 #-----------------------------------------
 #Utils. Fn
 obj_in_fn<-function(file){
@@ -82,7 +82,7 @@ cl_res_tbl %>%
   ggplot(.,aes(feature_n,-log10(pois.pval)))+
   geom_point()+
   facet_wrap(res~.,scales='free')
-save(cl_res_tbl,file="./data/GM12878_pois_pval_tbl.Rda")
+save(cl_res_tbl,file="./data/pval_tbl/H1_pois_pval_tbl.Rda")
 #------------------------------------------------------------------
 load("~/Documents/multires_bhicect/Bootstrapp_fn/data/pval_tbl/CAGE_union_GM12878_pval_tbl.Rda")
 
