@@ -186,6 +186,7 @@ DAGGER_fn<-function(chromo,chr_bpt,chr_pval_tbl,alpha){
 res_folder<-"~/Documents/multires_bhicect/data/HMEC/spec_res/"
 pval_tbl_file<-"./data/pval_tbl/HMEC_pois_pval_tbl.Rda"
 feature_GRange_file<-"./data/GRanges/CAGE_union_HMEC_Grange.Rda"
+out_file<-"./data/pval_tbl/DAGGER/HMEC_poisson_DAGGER_01.Rda"
 #--------------------------
 pval_tbl<-obj_in_fn(pval_tbl_file)
 feature_GRange<-obj_in_fn(feature_GRange_file)
@@ -194,7 +195,7 @@ chr_set<-unique(pval_tbl$chr)
 chr_res_l<-vector('list',length(chr_set))
 names(chr_res_l)<-chr_set
 
-for(chromo in unique(cage_tss_pval_tbl$chr)){
+for(chromo in chr_set){
   message(chromo)
   # Build the BHiCect tree
   chr_spec_res<-obj_in_fn(paste0(res_folder,chromo,"_spec_res.Rda"))
@@ -222,3 +223,4 @@ for(chromo in unique(cage_tss_pval_tbl$chr)){
   
 }
 chr_dagger_tbl<-do.call(bind_rows,chr_res_l)
+save(chr_dagger_tbl,file=out_file)
