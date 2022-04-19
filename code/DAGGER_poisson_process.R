@@ -186,7 +186,7 @@ DAGGER_fn<-function(chromo,chr_bpt,chr_pval_tbl,alpha){
 res_folder<-"~/Documents/multires_bhicect/data/HMEC/spec_res/"
 pval_tbl_file<-"./data/pval_tbl/HMEC_pois_pval_tbl.Rda"
 feature_GRange_file<-"./data/GRanges/CAGE_union_HMEC_Grange.Rda"
-out_file<-"./data/pval_tbl/DAGGER/HMEC_poisson_DAGGER_01.Rda"
+out_file<-"./data/pval_tbl/DAGGER/HMEC_poisson_DAGGER_05.Rda"
 #--------------------------
 pval_tbl<-obj_in_fn(pval_tbl_file)
 feature_GRange<-obj_in_fn(feature_GRange_file)
@@ -215,7 +215,7 @@ for(chromo in chr_set){
   cage_set<-unique(c(chr_top_cl,unique(unlist(node_ancestor[chr_top_cl])))) 
   #rebuild corresponding tree
   Prune(chr_bpt, function(x) x$name %in% cage_set)
-  alpha_seq<-0.01
+  alpha_seq<-0.05
   chr_res_l[[chromo]]<-  DAGGER_fn(chromo,chr_bpt,chr_pval_tbl,alpha_seq) %>% 
     left_join(.,chr_pval_tbl %>% 
                 dplyr::select(chr,res,cl,feature_n,pois.pval) %>% 

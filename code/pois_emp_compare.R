@@ -26,9 +26,10 @@ mres_dagger_tbl<-obj_in_fn(mres_dagger_file)
 emp_pval_tbl<-obj_in_fn(emp_pval_file)
 dagger_tbl %>%
   dplyr::rename(cl=node) %>% 
-  left_join(.,emp_pval_tbl) %>% 
+  left_join(.,emp_pval_tbl) %>%
+  mutate(res=fct_relevel(res,res_set)) %>% 
   ggplot(.,aes(-log10(pois.pval),-log10(emp.pval)))+
   geom_point()+
-  facet_wrap(res~.,scales="free")
-  xlim(c(0,20))
+  facet_wrap(res~.,scales="free")+
+  xlim(c(0,10))
   
